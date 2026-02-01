@@ -1,8 +1,8 @@
 package com.stayease.controller;
 
-import com.stayease.controller.request.UpdateUserRequest;
-import com.stayease.controller.response.ApiResponse;
-import com.stayease.controller.response.UserResponse;
+import com.stayease.dto.request.UpdateUserRequest;
+import com.stayease.dto.response.ApiResponse;
+import com.stayease.dto.response.UserResponse;
 import com.stayease.service.CustomUserDetailsService.UserPrincipal;
 import com.stayease.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;

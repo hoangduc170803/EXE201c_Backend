@@ -1,6 +1,9 @@
 package com.stayease.utils;
 
-import com.stayease.controller.response.*;
+import com.stayease.dto.response.AmenityResponse;
+import com.stayease.dto.response.CategoryResponse;
+import com.stayease.dto.response.PropertyImageResponse;
+import com.stayease.dto.response.PropertyResponse;
 import com.stayease.model.*;
 import org.springframework.stereotype.Component;
 

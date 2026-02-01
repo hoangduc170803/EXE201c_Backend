@@ -1,4 +1,4 @@
-package com.stayease.controller.request;
+package com.stayease.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;

@@ -1,35 +1,39 @@
-package com.stayease.controller.response;
+package com.stayease.dto.request;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResponse {
+public class UpdateUserRequest {
     
-    private Long id;
-    private String email;
+    @Size(max = 50)
     private String firstName;
+    
+    @Size(max = 50)
     private String lastName;
-    private String fullName;
+    
+    @Size(max = 20)
     private String phone;
+    
     private String avatarUrl;
     private LocalDate dateOfBirth;
     private String address;
+    
+    @Size(max = 100)
     private String city;
+    
+    @Size(max = 100)
     private String country;
+    
+    @Size(max = 500)
     private String bio;
-    private Boolean isVerified;
-    private Boolean isHost;
-    private Set<String> roles;
-    private LocalDateTime createdAt;
 }
 

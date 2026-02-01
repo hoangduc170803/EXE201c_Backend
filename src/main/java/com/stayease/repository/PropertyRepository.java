@@ -43,5 +43,33 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
     
     @Query("SELECT DISTINCT p.city FROM Property p WHERE p.status = 'ACTIVE' AND p.isDeleted = false ORDER BY p.city")
     List<String> findDistinctCities();
+
+    @Query("""
+        SELECT DISTINCT p FROM Property p 
+        LEFT JOIN p.amenities a 
+        WHERE p.status = 'ACTIVE' AND p.isDeleted = false
+        AND (:categoryId IS NULL OR p.category.id = :categoryId)
+        AND (:minPrice IS NULL OR p.pricePerNight >= :minPrice)
+        AND (:maxPrice IS NULL OR p.pricePerNight <= :maxPrice)
+        AND (:propertyType IS NULL OR p.propertyType = :propertyType)
+        AND (:city IS NULL OR LOWER(p.city) LIKE LOWER(CONCAT('%', :city, '%')))
+        AND (:isInstantBook IS NULL OR p.isInstantBook = :isInstantBook)
+        AND (:minGuests IS NULL OR p.maxGuests >= :minGuests)
+        AND (COALESCE(:amenityIds, NULL) IS NULL OR a.id IN :amenityIds)
+        GROUP BY p.id
+        HAVING COALESCE(:amenitySize, 0) = 0 OR COUNT(DISTINCT a.id) >= :amenitySize
+    """)
+    Page<Property> filterProperties(
+        @Param("categoryId") Long categoryId,
+        @Param("minPrice") Double minPrice,
+        @Param("maxPrice") Double maxPrice,
+        @Param("propertyType") String propertyType,
+        @Param("city") String city,
+        @Param("isInstantBook") Boolean isInstantBook,
+        @Param("minGuests") Integer minGuests,
+        @Param("amenityIds") List<Long> amenityIds,
+        @Param("amenitySize") Long amenitySize,
+        Pageable pageable
+    );
 }
 

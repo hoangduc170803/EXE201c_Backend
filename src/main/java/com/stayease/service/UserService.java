@@ -1,7 +1,7 @@
 package com.stayease.service;
 
-import com.stayease.controller.request.UpdateUserRequest;
-import com.stayease.controller.response.UserResponse;
+import com.stayease.dto.request.UpdateUserRequest;
+import com.stayease.dto.response.UserResponse;
 import com.stayease.exception.ResourceNotFoundException;
 import com.stayease.model.Role;
 import com.stayease.model.User;

@@ -1,10 +1,10 @@
 package com.stayease.service;
 
 import com.stayease.config.JwtTokenProvider;
-import com.stayease.controller.request.LoginRequest;
-import com.stayease.controller.request.RegisterRequest;
-import com.stayease.controller.response.AuthResponse;
-import com.stayease.controller.response.UserResponse;
+import com.stayease.dto.request.LoginRequest;
+import com.stayease.dto.request.RegisterRequest;
+import com.stayease.dto.response.AuthResponse;
+import com.stayease.dto.response.UserResponse;
 import com.stayease.exception.BadRequestException;
 import com.stayease.exception.ConflictException;
 import com.stayease.model.Role;

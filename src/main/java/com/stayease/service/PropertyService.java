@@ -1,8 +1,9 @@
 package com.stayease.service;
 
-import com.stayease.controller.request.CreatePropertyRequest;
-import com.stayease.controller.response.PageResponse;
-import com.stayease.controller.response.PropertyResponse;
+import com.stayease.dto.request.CreatePropertyRequest;
+import com.stayease.dto.request.PropertyFilterRequest;
+import com.stayease.dto.response.PageResponse;
+import com.stayease.dto.response.PropertyResponse;
 import com.stayease.exception.ResourceNotFoundException;
 import com.stayease.exception.UnauthorizedException;
 import com.stayease.model.*;
@@ -197,5 +198,36 @@ public class PropertyService {
 
     public List<String> getDistinctCities() {
         return propertyRepository.findDistinctCities();
+    }
+
+    public PageResponse<PropertyResponse> filterProperties(PropertyFilterRequest filter, int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+            ? Sort.by(sortBy).ascending()
+            : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Long amenitySize = (filter.getAmenityIds() != null && !filter.getAmenityIds().isEmpty())
+            ? (long) filter.getAmenityIds().size()
+            : null;
+
+        Page<Property> propertyPage = propertyRepository.filterProperties(
+            filter.getCategoryId(),
+            filter.getMinPrice(),
+            filter.getMaxPrice(),
+            filter.getPropertyType(),
+            filter.getCity(),
+            filter.getIsInstantBook(),
+            filter.getMinGuests(),
+            filter.getAmenityIds(),
+            amenitySize,
+            pageable
+        );
+
+        List<PropertyResponse> content = propertyPage.getContent().stream()
+                .map(propertyMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return PageResponse.from(propertyPage, content);
     }
 }

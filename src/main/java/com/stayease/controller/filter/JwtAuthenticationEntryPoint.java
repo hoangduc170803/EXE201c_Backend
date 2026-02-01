@@ -1,7 +1,7 @@
 package com.stayease.controller.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.stayease.controller.response.ApiResponse;
+import com.stayease.dto.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;

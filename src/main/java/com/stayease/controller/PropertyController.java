@@ -1,9 +1,10 @@
 package com.stayease.controller;
 
-import com.stayease.controller.request.CreatePropertyRequest;
-import com.stayease.controller.response.ApiResponse;
-import com.stayease.controller.response.PageResponse;
-import com.stayease.controller.response.PropertyResponse;
+import com.stayease.dto.request.CreatePropertyRequest;
+import com.stayease.dto.request.PropertyFilterRequest;
+import com.stayease.dto.response.ApiResponse;
+import com.stayease.dto.response.PageResponse;
+import com.stayease.dto.response.PropertyResponse;
 import com.stayease.service.CustomUserDetailsService.UserPrincipal;
 import com.stayease.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -112,6 +113,41 @@ public class PropertyController {
         return ResponseEntity.ok(ApiResponse.success(cities));
     }
     
+    @GetMapping("/filter")
+    @Operation(summary = "Filter properties with multiple conditions")
+    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> filterProperties(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String propertyType,
+            @RequestParam(required = false) List<Long> amenityIds,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) Boolean isInstantBook,
+            @RequestParam(required = false) Boolean freeCancellation,
+            @RequestParam(required = false) Integer minGuests,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        PropertyFilterRequest filter = PropertyFilterRequest.builder()
+                .categoryId(categoryId)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .propertyType(propertyType)
+                .amenityIds(amenityIds)
+                .city(city)
+                .isInstantBook(isInstantBook)
+                .freeCancellation(freeCancellation)
+                .minGuests(minGuests)
+                .build();
+
+        PageResponse<PropertyResponse> properties =
+            propertyService.filterProperties(filter, page, size, sortBy, sortDir);
+
+        return ResponseEntity.ok(ApiResponse.success(properties));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('HOST')")
     @Operation(summary = "Create property")

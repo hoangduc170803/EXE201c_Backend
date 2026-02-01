@@ -1,6 +1,6 @@
 package com.stayease.exception;
 
-import com.stayease.controller.response.ApiResponse;
+import com.stayease.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;

@@ -1,7 +1,7 @@
 package com.stayease.controller;
 
-import com.stayease.controller.response.ApiResponse;
-import com.stayease.controller.response.CategoryResponse;
+import com.stayease.dto.response.ApiResponse;
+import com.stayease.dto.response.CategoryResponse;
 import com.stayease.model.Category;
 import com.stayease.repository.CategoryRepository;
 import com.stayease.utils.PropertyMapper;
