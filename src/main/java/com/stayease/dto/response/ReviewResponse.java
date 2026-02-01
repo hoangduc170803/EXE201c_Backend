@@ -1,4 +1,4 @@
-package com.stayease.controller.response;
+package com.stayease.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

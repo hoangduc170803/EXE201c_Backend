@@ -1,4 +1,4 @@
-package com.stayease.controller.request;
+package com.stayease.dto.request;
 
 import com.stayease.model.Property.PropertyType;
 import jakarta.validation.constraints.*;

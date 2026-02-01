@@ -1,7 +1,7 @@
 package com.stayease.controller;
 
-import com.stayease.controller.response.AmenityResponse;
-import com.stayease.controller.response.ApiResponse;
+import com.stayease.dto.response.AmenityResponse;
+import com.stayease.dto.response.ApiResponse;
 import com.stayease.model.Amenity.AmenityCategory;
 import com.stayease.repository.AmenityRepository;
 import com.stayease.utils.PropertyMapper;

@@ -1,10 +1,10 @@
 package com.stayease.controller;
 
-import com.stayease.controller.request.LoginRequest;
-import com.stayease.controller.request.RegisterRequest;
-import com.stayease.controller.response.ApiResponse;
-import com.stayease.controller.response.AuthResponse;
-import com.stayease.controller.response.UserResponse;
+import com.stayease.dto.request.LoginRequest;
+import com.stayease.dto.request.RegisterRequest;
+import com.stayease.dto.response.ApiResponse;
+import com.stayease.dto.response.AuthResponse;
+import com.stayease.dto.response.UserResponse;
 import com.stayease.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

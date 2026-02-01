@@ -1,6 +1,5 @@
-package com.stayease.controller.response;
+package com.stayease.dto.response;
 
-import com.stayease.model.Amenity.AmenityCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,12 +9,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AmenityResponse {
+public class CategoryResponse {
     
     private Long id;
     private String name;
     private String description;
     private String icon;
-    private AmenityCategory category;
+    private String imageUrl;
+    private String slug;
+    private Integer displayOrder;
+    private Long propertyCount;
 }
 

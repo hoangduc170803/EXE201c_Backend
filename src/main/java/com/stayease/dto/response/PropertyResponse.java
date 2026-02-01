@@ -1,4 +1,4 @@
-package com.stayease.controller.response;
+package com.stayease.dto.response;
 
 import com.stayease.model.Property.PropertyStatus;
 import com.stayease.model.Property.PropertyType;

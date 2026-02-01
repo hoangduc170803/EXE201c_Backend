@@ -1,6 +1,6 @@
 package com.stayease.utils;
 
-import com.stayease.controller.response.BookingResponse;
+import com.stayease.dto.response.BookingResponse;
 import com.stayease.model.Booking;
 import org.springframework.stereotype.Component;
 

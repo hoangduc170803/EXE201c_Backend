@@ -1,9 +1,9 @@
 package com.stayease.controller;
 
-import com.stayease.controller.request.CreateBookingRequest;
-import com.stayease.controller.response.ApiResponse;
-import com.stayease.controller.response.BookingResponse;
-import com.stayease.controller.response.PageResponse;
+import com.stayease.dto.request.CreateBookingRequest;
+import com.stayease.dto.response.ApiResponse;
+import com.stayease.dto.response.BookingResponse;
+import com.stayease.dto.response.PageResponse;
 import com.stayease.service.BookingService;
 import com.stayease.service.CustomUserDetailsService.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;

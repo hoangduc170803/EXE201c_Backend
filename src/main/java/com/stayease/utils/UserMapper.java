@@ -1,6 +1,6 @@
 package com.stayease.utils;
 
-import com.stayease.controller.response.UserResponse;
+import com.stayease.dto.response.UserResponse;
 import com.stayease.model.User;
 import org.springframework.stereotype.Component;
 
