@@ -3,6 +3,8 @@ package com.stayease.controller;
 import com.stayease.dto.request.CreateBookingRequest;
 import com.stayease.dto.response.ApiResponse;
 import com.stayease.dto.response.BookingResponse;
+import com.stayease.dto.response.BookingStatsResponse;
+import com.stayease.dto.response.BookingCalendarResponse;
 import com.stayease.dto.response.PageResponse;
 import com.stayease.service.BookingService;
 import com.stayease.service.CustomUserDetailsService.UserPrincipal;
@@ -84,6 +86,13 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success(Map.of("available", available)));
     }
     
+    @GetMapping("/booked-dates/{propertyId}")
+    @Operation(summary = "Get booked dates for property")
+    public ResponseEntity<ApiResponse<List<LocalDate>>> getBookedDates(@PathVariable Long propertyId) {
+        List<LocalDate> bookedDates = bookingService.getBookedDates(propertyId);
+        return ResponseEntity.ok(ApiResponse.success(bookedDates));
+    }
+
     @PostMapping
     @Operation(summary = "Create booking")
     public ResponseEntity<ApiResponse<BookingResponse>> createBooking(
@@ -101,13 +110,45 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Booking confirmed", booking));
     }
     
+    @PutMapping("/{id}/payment")
+    @Operation(summary = "Process payment for booking")
+    public ResponseEntity<ApiResponse<BookingResponse>> processPayment(
+            @PathVariable Long id,
+            @RequestParam String paymentMethod) {
+        BookingResponse booking = bookingService.processPayment(id, paymentMethod);
+        return ResponseEntity.ok(ApiResponse.success("Payment processed successfully", booking));
+    }
+
     @PutMapping("/{id}/cancel")
-    @Operation(summary = "Cancel booking")
+    @Operation(summary = "Cancel booking (Guest or Host can cancel/reject)")
     public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(
             @PathVariable Long id,
             @RequestParam(required = false) String reason) {
         BookingResponse booking = bookingService.cancelBooking(id, reason);
         return ResponseEntity.ok(ApiResponse.success("Booking cancelled", booking));
     }
-}
 
+    @GetMapping("/host-stats")
+    @PreAuthorize("hasRole('HOST')")
+    @Operation(summary = "Get host booking statistics")
+    public ResponseEntity<ApiResponse<BookingStatsResponse>> getHostBookingStats(
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        BookingStatsResponse stats = bookingService.getHostBookingStats(currentUser.getId());
+        return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    @GetMapping("/host-calendar")
+    @PreAuthorize("hasRole('HOST')")
+    @Operation(summary = "Get host booking calendar for a specific month")
+    public ResponseEntity<ApiResponse<BookingCalendarResponse>> getHostBookingCalendar(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @RequestParam(defaultValue = "0") int year,
+            @RequestParam(defaultValue = "0") int month) {
+        // Use current date if not specified
+        if (year == 0) year = LocalDate.now().getYear();
+        if (month == 0) month = LocalDate.now().getMonthValue();
+
+        BookingCalendarResponse calendar = bookingService.getHostBookingCalendar(currentUser.getId(), year, month);
+        return ResponseEntity.ok(ApiResponse.success(calendar));
+    }
+}

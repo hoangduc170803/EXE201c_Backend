@@ -2,6 +2,7 @@ package com.stayease.repository;
 
 import com.stayease.model.Booking;
 import com.stayease.model.Booking.BookingStatus;
+import com.stayease.model.Booking.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,5 +39,41 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT SUM(b.totalPrice) FROM Booking b WHERE b.property.host.id = :hostId " +
            "AND b.status = 'COMPLETED' AND b.createdAt >= :startDate")
     BigDecimal getTotalRevenueByHost(@Param("hostId") Long hostId, @Param("startDate") LocalDate startDate);
-}
 
+    // Statistics methods
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.property.host.id = :hostId AND b.status = :status AND b.paymentStatus = :paymentStatus")
+    Long countByHostIdAndStatusAndPaymentStatus(
+        @Param("hostId") Long hostId,
+        @Param("status") BookingStatus status,
+        @Param("paymentStatus") PaymentStatus paymentStatus);
+
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.property.host.id = :hostId AND b.status = :status AND b.createdAt BETWEEN :start AND :end")
+    Long countByHostIdAndStatusAndCreatedAtBetween(
+        @Param("hostId") Long hostId,
+        @Param("status") BookingStatus status,
+        @Param("start") LocalDateTime start,
+        @Param("end") LocalDateTime end);
+
+    @Query("SELECT SUM(b.totalPrice) FROM Booking b WHERE b.property.host.id = :hostId AND b.status = :status")
+    BigDecimal sumTotalPriceByHostIdAndStatus(@Param("hostId") Long hostId, @Param("status") BookingStatus status);
+
+    @Query("SELECT SUM(b.totalPrice) FROM Booking b WHERE b.property.host.id = :hostId AND b.status = :status AND b.checkInDate > :checkInDate")
+    BigDecimal sumTotalPriceByHostIdAndStatusAndCheckInDateAfter(
+        @Param("hostId") Long hostId,
+        @Param("status") BookingStatus status,
+        @Param("checkInDate") LocalDate checkInDate);
+
+    // Calendar methods
+    @Query("SELECT b FROM Booking b WHERE b.property.host.id = :hostId " +
+           "AND b.status IN ('PENDING', 'CONFIRMED') " +
+           "AND ((b.checkInDate <= :endDate AND b.checkOutDate >= :startDate)) " +
+           "ORDER BY b.checkInDate ASC")
+    List<Booking> findByHostIdAndDateRange(
+        @Param("hostId") Long hostId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.property.host.id = :hostId AND b.status = :status")
+    @Deprecated // Use the method with PaymentStatus instead
+    Long countByHostIdAndStatus(@Param("hostId") Long hostId, @Param("status") BookingStatus status);
+}

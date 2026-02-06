@@ -3,6 +3,11 @@ package com.stayease.config;
 import com.stayease.controller.filter.JwtAuthenticationEntryPoint;
 import com.stayease.controller.filter.JwtAuthenticationFilter;
 import com.stayease.service.CustomUserDetailsService;
+import com.stayease.model.User;
+import com.stayease.model.Role;
+import com.stayease.repository.UserRepository;
+import com.stayease.repository.RoleRepository;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -99,5 +104,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-}
 
+}
