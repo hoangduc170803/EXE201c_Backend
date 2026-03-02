@@ -5,19 +5,24 @@ import com.stayease.dto.request.PropertyFilterRequest;
 import com.stayease.dto.response.ApiResponse;
 import com.stayease.dto.response.PageResponse;
 import com.stayease.dto.response.PropertyResponse;
+import com.stayease.model.Property;
 import com.stayease.service.CustomUserDetailsService.UserPrincipal;
 import com.stayease.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/properties")
 @Tag(name = "Properties", description = "Property management API")
@@ -85,6 +90,54 @@ public class PropertyController {
         return ResponseEntity.ok(ApiResponse.success(properties));
     }
     
+    @GetMapping("/long-term")
+    @Operation(summary = "Get long-term rental properties")
+    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> getLongTermProperties(
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) List<String> propertyType,
+            @RequestParam(required = false) List<Long> amenityIds,
+            @RequestParam(required = false) Integer minArea,
+            @RequestParam(required = false) Integer maxArea,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        PageResponse<PropertyResponse> properties = propertyService.getLongTermProperties(
+                minPrice, maxPrice, city, categoryId, propertyType, amenityIds,
+                minArea, maxArea, page, size, sortBy, sortDir
+        );
+        log.info("Long term properties: " + properties.getTotalElements());
+        return ResponseEntity.ok(ApiResponse.success(properties));
+    }
+
+    @GetMapping("/short-term")
+    @Operation(summary = "Get short-term rental properties")
+    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> getShortTermProperties(
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) List<String> propertyType,
+            @RequestParam(required = false) List<Long> amenityIds,
+            @RequestParam(required = false) Integer minGuests,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        PageResponse<PropertyResponse> properties = propertyService.getShortTermProperties(
+            minPrice, maxPrice, city, propertyType, amenityIds, minGuests, checkIn, checkOut,
+            page, size, sortBy, sortDir
+        );
+        log.info("short term" + properties.toString());
+        return ResponseEntity.ok(ApiResponse.success(properties));
+    }
+
     @GetMapping("/host/{hostId}")
     @Operation(summary = "Get host properties")
     public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> getHostProperties(
@@ -112,7 +165,14 @@ public class PropertyController {
         List<String> cities = propertyService.getDistinctCities();
         return ResponseEntity.ok(ApiResponse.success(cities));
     }
-    
+
+    @GetMapping("/property-types")
+    @Operation(summary = "Get distinct property types")
+    public ResponseEntity<ApiResponse<List<String>>> getDistinctPropertyTypes() {
+        List<String> propertyTypes = propertyService.getDistinctPropertyTypes();
+        return ResponseEntity.ok(ApiResponse.success(propertyTypes));
+    }
+
     @GetMapping("/filter")
     @Operation(summary = "Filter properties with multiple conditions")
     public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> filterProperties(
@@ -125,6 +185,8 @@ public class PropertyController {
             @RequestParam(required = false) Boolean isInstantBook,
             @RequestParam(required = false) Boolean freeCancellation,
             @RequestParam(required = false) Integer minGuests,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -140,6 +202,8 @@ public class PropertyController {
                 .isInstantBook(isInstantBook)
                 .freeCancellation(freeCancellation)
                 .minGuests(minGuests)
+                .checkIn(checkIn)
+                .checkOut(checkOut)
                 .build();
 
         PageResponse<PropertyResponse> properties =
@@ -158,6 +222,18 @@ public class PropertyController {
                 .body(ApiResponse.success("Property created", property));
     }
     
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('HOST')")
+    @Operation(summary = "Update property status")
+    public ResponseEntity<ApiResponse<PropertyResponse>> updatePropertyStatus(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> request,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        String status = request.get("status");
+        PropertyResponse property = propertyService.updatePropertyStatus(id, status, currentUser.getId());
+        return ResponseEntity.ok(ApiResponse.success("Property status updated", property));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('HOST')")
     @Operation(summary = "Delete property")

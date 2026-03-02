@@ -1,6 +1,7 @@
 package com.stayease.dto.request;
 
-import com.stayease.model.Property.PropertyType;
+import com.stayease.enums.PropertyType;
+import com.stayease.enums.RentalType;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +28,9 @@ public class CreatePropertyRequest {
     @NotNull(message = "Property type is required")
     private PropertyType propertyType;
     
+    // Rental type: SHORT_TERM or LONG_TERM
+    private RentalType rentalType;
+
     @NotBlank(message = "Address is required")
     private String address;
     
@@ -42,16 +46,33 @@ public class CreatePropertyRequest {
     private BigDecimal latitude;
     private BigDecimal longitude;
     
-    @NotNull(message = "Price per night is required")
-    @DecimalMin(value = "0.01", message = "Price must be greater than 0")
+    // Short-term rental pricing (validated conditionally based on rentalType)
     private BigDecimal pricePerNight;
     
+    // Long-term rental pricing (validated conditionally based on rentalType)
+    private BigDecimal pricePerMonth;
+
+    // Utility costs for long-term rentals
+    private String electricityCost;
+    private String waterCost;
+    private String internetCost;
+
+    // Deposit and lease terms
+    @Min(value = 0)
+    private Integer depositMonths;
+
+    @Min(value = 1)
+    private Integer minimumLeaseMonths;
+
     @DecimalMin(value = "0")
     private BigDecimal cleaningFee;
     
     @DecimalMin(value = "0")
     private BigDecimal serviceFee;
     
+    @DecimalMin(value = "0")
+    private BigDecimal securityDeposit;
+
     @NotNull(message = "Max guests is required")
     @Min(value = 1)
     private Integer maxGuests;
@@ -67,11 +88,16 @@ public class CreatePropertyRequest {
     
     private Integer areaSqft;
     
+    // Short-term rental settings
     @Min(value = 1)
     private Integer minNights = 1;
     
     private Integer maxNights = 365;
     
+    // Long-term rental settings
+    @Min(value = 1)
+    private Integer leaseDuration;
+
     private String checkInTime;
     private String checkOutTime;
     private String houseRules;

@@ -1,5 +1,6 @@
 package com.stayease.model;
 
+import com.stayease.enums.MessageType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -47,10 +48,6 @@ public class Message {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
-    
-    public enum MessageType {
-        TEXT, IMAGE, FILE, SYSTEM
-    }
     
     public void markAsRead() {
         this.isRead = true;

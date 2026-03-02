@@ -2,6 +2,7 @@ package com.stayease.service;
 
 import com.stayease.dto.request.UpdateUserRequest;
 import com.stayease.dto.response.UserResponse;
+import com.stayease.enums.RoleName;
 import com.stayease.exception.ResourceNotFoundException;
 import com.stayease.model.Role;
 import com.stayease.model.User;
@@ -57,7 +58,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         
-        Role hostRole = roleRepository.findByName(Role.RoleName.ROLE_HOST)
+        Role hostRole = roleRepository.findByName(RoleName.ROLE_HOST)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "ROLE_HOST"));
         
         user.setIsHost(true);

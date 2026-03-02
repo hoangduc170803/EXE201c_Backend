@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -21,5 +22,8 @@ public class PropertyFilterRequest {
     private Boolean isInstantBook;
     private Boolean freeCancellation;
     private Integer minGuests;
+    private LocalDate checkIn;
+    private LocalDate checkOut;
+    private String rentalType;  // LONG_TERM or SHORT_TERM
 }
 

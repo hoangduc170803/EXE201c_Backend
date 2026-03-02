@@ -1,8 +1,8 @@
 package com.stayease.repository;
 
+import com.stayease.enums.BookingStatus;
+import com.stayease.enums.PaymentStatus;
 import com.stayease.model.Booking;
-import com.stayease.model.Booking.BookingStatus;
-import com.stayease.model.Booking.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

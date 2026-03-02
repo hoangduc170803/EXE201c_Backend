@@ -16,5 +16,8 @@ public class PropertyImageResponse {
     private String caption;
     private Integer displayOrder;
     private Boolean isPrimary;
+    private String mediaType;
+    private Long fileSize;
+    private Integer duration;
 }
 
