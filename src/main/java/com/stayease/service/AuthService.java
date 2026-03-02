@@ -5,6 +5,7 @@ import com.stayease.dto.request.LoginRequest;
 import com.stayease.dto.request.RegisterRequest;
 import com.stayease.dto.response.AuthResponse;
 import com.stayease.dto.response.UserResponse;
+import com.stayease.enums.RoleName;
 import com.stayease.exception.BadRequestException;
 import com.stayease.exception.ConflictException;
 import com.stayease.model.Role;
@@ -69,7 +70,7 @@ public class AuthService {
             throw new ConflictException("Email already registered");
         }
         
-        Role userRole = roleRepository.findByName(Role.RoleName.ROLE_USER)
+        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
                 .orElseThrow(() -> new BadRequestException("Default role not found"));
         
         User user = User.builder()

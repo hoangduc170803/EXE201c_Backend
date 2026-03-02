@@ -1,6 +1,6 @@
 package com.stayease.dto.response;
 
-import com.stayease.model.Amenity.AmenityCategory;
+import com.stayease.enums.AmenityCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

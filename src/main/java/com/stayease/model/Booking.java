@@ -1,5 +1,7 @@
 package com.stayease.model;
 
+import com.stayease.enums.BookingStatus;
+import com.stayease.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -104,15 +106,6 @@ public class Booking extends BaseEntity {
     
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Review review;
-    
-    // Enums
-    public enum BookingStatus {
-        PENDING, CONFIRMED, CANCELLED, COMPLETED, REJECTED, NO_SHOW
-    }
-    
-    public enum PaymentStatus {
-        PENDING, PAID, PARTIALLY_PAID, REFUNDED, PARTIALLY_REFUNDED, FAILED
-    }
     
     // Helper methods
     @PrePersist

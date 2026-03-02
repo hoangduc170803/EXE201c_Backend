@@ -1,7 +1,8 @@
 package com.stayease.repository;
 
+import com.stayease.enums.PropertyStatus;
+import com.stayease.enums.RentalType;
 import com.stayease.model.Property;
-import com.stayease.model.Property.PropertyStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,7 +12,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -44,17 +44,32 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
     @Query("SELECT DISTINCT p.city FROM Property p WHERE p.status = 'ACTIVE' AND p.isDeleted = false ORDER BY p.city")
     List<String> findDistinctCities();
 
+    @Query("SELECT DISTINCT CAST(p.propertyType AS string) FROM Property p WHERE p.status = 'ACTIVE' AND p.isDeleted = false AND p.propertyType IS NOT NULL ORDER BY CAST(p.propertyType AS String)")
+    List<String> findDistinctPropertyTypes();
+
     @Query("""
         SELECT DISTINCT p FROM Property p 
         LEFT JOIN p.amenities a 
         WHERE p.status = 'ACTIVE' AND p.isDeleted = false
         AND (:categoryId IS NULL OR p.category.id = :categoryId)
-        AND (:minPrice IS NULL OR p.pricePerNight >= :minPrice)
-        AND (:maxPrice IS NULL OR p.pricePerNight <= :maxPrice)
-        AND (:propertyType IS NULL OR p.propertyType = :propertyType)
+        AND (
+            :rentalType IS NULL OR 
+            (:rentalType = 'LONG_TERM' AND (
+                (:minPrice IS NULL OR p.pricePerMonth >= :minPrice) AND 
+                (:maxPrice IS NULL OR p.pricePerMonth <= :maxPrice)
+            )) OR
+            (:rentalType = 'SHORT_TERM' AND (
+                (:minPrice IS NULL OR p.pricePerNight >= :minPrice) AND 
+                (:maxPrice IS NULL OR p.pricePerNight <= :maxPrice)
+            ))
+        )
+        AND (COALESCE(:propertyTypes, NULL) IS NULL OR CAST(p.propertyType AS string) IN :propertyTypes)
         AND (:city IS NULL OR LOWER(p.city) LIKE LOWER(CONCAT('%', :city, '%')))
         AND (:isInstantBook IS NULL OR p.isInstantBook = :isInstantBook)
         AND (:minGuests IS NULL OR p.maxGuests >= :minGuests)
+        AND (:minArea IS NULL OR p.areaSqft >= :minArea)
+        AND (:maxArea IS NULL OR p.areaSqft <= :maxArea)
+        AND (:rentalType IS NULL OR p.rentalType = :rentalType)
         AND (COALESCE(:amenityIds, NULL) IS NULL OR a.id IN :amenityIds)
         GROUP BY p.id
         HAVING COALESCE(:amenitySize, 0) = 0 OR COUNT(DISTINCT a.id) >= :amenitySize
@@ -63,12 +78,15 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
         @Param("categoryId") Long categoryId,
         @Param("minPrice") Double minPrice,
         @Param("maxPrice") Double maxPrice,
-        @Param("propertyType") String propertyType,
+        @Param("propertyTypes") List<String> propertyTypes,
         @Param("city") String city,
         @Param("isInstantBook") Boolean isInstantBook,
         @Param("minGuests") Integer minGuests,
+        @Param("minArea") Integer minArea,
+        @Param("maxArea") Integer maxArea,
         @Param("amenityIds") List<Long> amenityIds,
         @Param("amenitySize") Long amenitySize,
+        @Param("rentalType") RentalType rentalType,
         Pageable pageable
     );
 }

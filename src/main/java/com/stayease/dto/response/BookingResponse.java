@@ -1,7 +1,7 @@
 package com.stayease.dto.response;
 
-import com.stayease.model.Booking.BookingStatus;
-import com.stayease.model.Booking.PaymentStatus;
+import com.stayease.enums.BookingStatus;
+import com.stayease.enums.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

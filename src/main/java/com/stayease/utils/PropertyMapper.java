@@ -26,6 +26,7 @@ public class PropertyMapper {
                 .title(property.getTitle())
                 .description(property.getDescription())
                 .propertyType(property.getPropertyType())
+                .rentalType(property.getRentalType())
                 .address(property.getAddress())
                 .city(property.getCity())
                 .state(property.getState())
@@ -34,6 +35,12 @@ public class PropertyMapper {
                 .latitude(property.getLatitude())
                 .longitude(property.getLongitude())
                 .pricePerNight(property.getPricePerNight())
+                .pricePerMonth(property.getPricePerMonth())
+                .electricityCost(property.getElectricityCost())
+                .waterCost(property.getWaterCost())
+                .internetCost(property.getInternetCost())
+                .depositMonths(property.getDepositMonths())
+                .minimumLeaseMonths(property.getMinimumLeaseMonths())
                 .cleaningFee(property.getCleaningFee())
                 .serviceFee(property.getServiceFee())
                 .maxGuests(property.getMaxGuests())
@@ -102,6 +109,9 @@ public class PropertyMapper {
                 .caption(image.getCaption())
                 .displayOrder(image.getDisplayOrder())
                 .isPrimary(image.getIsPrimary())
+                .mediaType(image.getMediaType())
+                .fileSize(image.getFileSize())
+                .duration(image.getDuration())
                 .build();
     }
 }

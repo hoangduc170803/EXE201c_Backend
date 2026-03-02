@@ -1,7 +1,8 @@
 package com.stayease.dto.response;
 
-import com.stayease.model.Property.PropertyStatus;
-import com.stayease.model.Property.PropertyType;
+import com.stayease.enums.PropertyStatus;
+import com.stayease.enums.PropertyType;
+import com.stayease.enums.RentalType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class PropertyResponse {
     private String title;
     private String description;
     private PropertyType propertyType;
+    private RentalType rentalType; // NEW: LONG_TERM or SHORT_TERM
     private String address;
     private String city;
     private String state;
@@ -29,7 +31,18 @@ public class PropertyResponse {
     private String zipCode;
     private BigDecimal latitude;
     private BigDecimal longitude;
+
+    // Short-term rental pricing
     private BigDecimal pricePerNight;
+
+    // Long-term rental pricing
+    private BigDecimal pricePerMonth;
+    private String electricityCost;
+    private String waterCost;
+    private String internetCost;
+    private Integer depositMonths;
+    private Integer minimumLeaseMonths;
+
     private BigDecimal cleaningFee;
     private BigDecimal serviceFee;
     private Integer maxGuests;

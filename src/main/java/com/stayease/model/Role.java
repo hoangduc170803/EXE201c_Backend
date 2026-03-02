@@ -1,5 +1,6 @@
 package com.stayease.model;
 
+import com.stayease.enums.RoleName;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,11 +29,5 @@ public class Role {
     
     @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
-    
-    public enum RoleName {
-        ROLE_USER,
-        ROLE_HOST,
-        ROLE_ADMIN
-    }
 }
 

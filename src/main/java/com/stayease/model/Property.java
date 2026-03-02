@@ -1,5 +1,8 @@
 package com.stayease.model;
 
+import com.stayease.enums.PropertyStatus;
+import com.stayease.enums.PropertyType;
+import com.stayease.enums.RentalType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,6 +31,12 @@ public class Property extends BaseEntity {
     @Column(name = "property_type", length = 50)
     private PropertyType propertyType;
     
+    // Rental Type: LONG_TERM (thuê trọ) or SHORT_TERM (thuê ngắn hạn)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rental_type", length = 20)
+    @Builder.Default
+    private RentalType rentalType = RentalType.LONG_TERM;
+
     @Column(name = "address", nullable = false)
     private String address;
     
@@ -49,9 +58,28 @@ public class Property extends BaseEntity {
     @Column(name = "longitude", precision = 11, scale = 8)
     private BigDecimal longitude;
     
-    @Column(name = "price_per_night", precision = 10, scale = 2, nullable = false)
+    @Column(name = "price_per_night", precision = 10, scale = 2)
     private BigDecimal pricePerNight;
     
+    // Long-term rental pricing (thuê trọ)
+    @Column(name = "price_per_month", precision = 10, scale = 2)
+    private BigDecimal pricePerMonth;
+
+    @Column(name = "electricity_cost", length = 100)
+    private String electricityCost; // e.g., "Theo giá điện", "100,000đ/tháng", "3,500đ/kWh"
+
+    @Column(name = "water_cost", length = 100)
+    private String waterCost; // e.g., "100,000đ/tháng", "Miễn phí", "20,000đ/người"
+
+    @Column(name = "internet_cost", length = 100)
+    private String internetCost; // e.g., "Miễn phí", "100,000đ/tháng"
+
+    @Column(name = "deposit_months")
+    private Integer depositMonths; // Số tháng cọc (thường 1-2 tháng)
+
+    @Column(name = "minimum_lease_months")
+    private Integer minimumLeaseMonths; // Thời gian thuê tối thiểu (3, 6, 12 tháng)
+
     @Column(name = "cleaning_fee", precision = 10, scale = 2)
     private BigDecimal cleaningFee;
     
@@ -144,16 +172,6 @@ public class Property extends BaseEntity {
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Favorite> favorites = new ArrayList<>();
-    
-    // Enums
-    public enum PropertyType {
-        HOUSE, APARTMENT, VILLA, CONDO, TOWNHOUSE, CABIN, 
-        COTTAGE, STUDIO, LOFT, PENTHOUSE, FARMHOUSE, OTHER
-    }
-    
-    public enum PropertyStatus {
-        PENDING, ACTIVE, INACTIVE, REJECTED, UNDER_REVIEW
-    }
     
     // Helper methods
     public void addImage(PropertyImage image) {

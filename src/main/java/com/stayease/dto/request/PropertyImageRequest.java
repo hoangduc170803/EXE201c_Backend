@@ -1,6 +1,7 @@
 package com.stayease.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,19 @@ public class PropertyImageRequest {
     private String imageUrl;
     
     private String caption;
-    private Integer displayOrder;
-    private Boolean isPrimary = false;
-}
 
+    @NotNull(message = "Display order is required")
+    private Integer displayOrder;
+
+    @NotNull(message = "isPrimary flag is required")
+    private Boolean isPrimary;
+
+    // Media type: IMAGE, VIDEO, VIDEO_360
+    private String mediaType = "IMAGE";
+
+    // File size in bytes
+    private Long fileSize;
+
+    // Duration in seconds (for videos)
+    private Integer duration;
+}
