@@ -746,6 +746,28 @@ VALUES
 (10, 13, NOW()),
 (10, 21, NOW())
 ON DUPLICATE KEY UPDATE user_id = VALUES(user_id);
+INSERT INTO posting_packages (name, slug, description, price, duration_days, priority_level, is_active, features, created_at, is_deleted)
+VALUES
+    ('Gói Miễn Phí', 'free-package', 'Đăng tin cơ bản không tốn phí', 0, 7, 1, true,
+     'Hiển thị trong danh sách,Hỗ trợ 3 hình ảnh,Thời hạn 7 ngày',
+     NOW(), false),
+
+    ('Gói Tiết Kiệm', 'economy-package', 'Phù hợp cho tin đăng thông thường', 50000, 15, 1, true,
+     'Hiển thị trong danh sách,Hỗ trợ 10 hình ảnh,Thời hạn 15 ngày,Hỗ trợ video 360°',
+     NOW(), false),
+
+    ('Gói Tiêu Chuẩn', 'standard-package', 'Lựa chọn phổ biến nhất', 150000, 30, 2, true,
+     'Ưu tiên hiển thị,Hỗ trợ 15 hình ảnh,Thời hạn 30 ngày,Hỗ trợ video 360°,Huy hiệu "Tin mới",Thống kê lượt xem',
+     NOW(), false),
+
+    ('Gói Cao Cấp', 'premium-package', 'Tăng cơ hội cho thuê nhanh', 300000, 30, 3, true,
+     'Hiển thị nổi bật,Hỗ trợ không giới hạn hình ảnh,Thời hạn 30 ngày,Hỗ trợ video 360°,Huy hiệu "Tin VIP",Ưu tiên trong tìm kiếm,Thống kê chi tiết,Hỗ trợ ưu tiên 24/7',
+     NOW(), false),
+
+    ('Gói VIP', 'vip-package', 'Hiển thị tối đa - Cho thuê cực nhanh', 500000, 30, 4, true,
+     'Top đầu trang chủ,Hỗ trợ không giới hạn hình ảnh,Thời hạn 30 ngày,Hỗ trợ video 360°,Huy hiệu "Tin VIP PRO",Ưu tiên tối đa trong tìm kiếm,Thống kê chi tiết,Hỗ trợ ưu tiên 24/7,Quảng cáo banner,Đẩy tin tự động mỗi ngày',
+     NOW(), false);
+
 
 -- =============================================
 -- ✅ Done! Sample data inserted successfully
