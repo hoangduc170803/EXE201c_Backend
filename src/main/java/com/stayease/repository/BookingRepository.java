@@ -76,4 +76,33 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.property.host.id = :hostId AND b.status = :status")
     @Deprecated // Use the method with PaymentStatus instead
     Long countByHostIdAndStatus(@Param("hostId") Long hostId, @Param("status") BookingStatus status);
+
+    // Dashboard statistics methods
+    @Query("SELECT SUM(b.totalPrice) FROM Booking b WHERE b.property.host.id = :hostId " +
+           "AND b.status IN ('CONFIRMED', 'COMPLETED') " +
+           "AND MONTH(b.checkInDate) = :month AND YEAR(b.checkInDate) = :year")
+    BigDecimal sumRevenueByHostIdAndMonth(
+        @Param("hostId") Long hostId,
+        @Param("month") Integer month,
+        @Param("year") Integer year);
+
+    @Query("SELECT SUM(b.numGuests) FROM Booking b WHERE b.property.host.id = :hostId " +
+           "AND b.status IN ('CONFIRMED', 'COMPLETED')")
+    Long sumTotalGuestsByHostId(@Param("hostId") Long hostId);
+
+    @Query("SELECT SUM(b.numGuests) FROM Booking b WHERE b.property.host.id = :hostId " +
+           "AND b.status IN ('CONFIRMED', 'COMPLETED') " +
+           "AND MONTH(b.checkInDate) = :month AND YEAR(b.checkInDate) = :year")
+    Long sumGuestsByHostIdAndMonth(
+        @Param("hostId") Long hostId,
+        @Param("month") Integer month,
+        @Param("year") Integer year);
+
+    @Query("SELECT MONTH(b.checkInDate) as month, YEAR(b.checkInDate) as year, SUM(b.totalPrice) as revenue " +
+           "FROM Booking b WHERE b.property.host.id = :hostId " +
+           "AND b.status IN ('CONFIRMED', 'COMPLETED') " +
+           "AND YEAR(b.checkInDate) = :year " +
+           "GROUP BY MONTH(b.checkInDate), YEAR(b.checkInDate) " +
+           "ORDER BY MONTH(b.checkInDate)")
+    List<Object[]> findMonthlyRevenueByHostIdAndYear(@Param("hostId") Long hostId, @Param("year") Integer year);
 }

@@ -26,5 +26,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     BigDecimal getAverageRatingByProperty(@Param("propertyId") Long propertyId);
     
     Long countByPropertyIdAndIsPublicTrue(Long propertyId);
+
+    @Query("SELECT AVG(r.overallRating) FROM Review r WHERE r.property.host.id = :hostId AND r.isPublic = true")
+    BigDecimal getAverageRatingByHostId(@Param("hostId") Long hostId);
+
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.property.host.id = :hostId AND r.isPublic = true")
+    Long countByHostId(@Param("hostId") Long hostId);
 }
 
