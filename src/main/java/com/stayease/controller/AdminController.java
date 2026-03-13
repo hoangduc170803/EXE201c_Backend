@@ -91,9 +91,24 @@ public class AdminController {
         return ResponseEntity.ok(walletService.getAllTransactions(pageable));
     }
 
+    @GetMapping("/transactions/pending-deposits")
+    public ResponseEntity<Page<WalletTransactionResponse>> getPendingDeposits(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(walletService.getPendingDeposits(pageable));
+    }
+
     @PutMapping("/transactions/confirm-deposit/{transactionCode}")
     public ResponseEntity<WalletTransactionResponse> confirmDeposit(@PathVariable String transactionCode) {
         return ResponseEntity.ok(walletService.confirmDeposit(transactionCode));
+    }
+
+    @PutMapping("/transactions/reject-deposit/{transactionCode}")
+    public ResponseEntity<WalletTransactionResponse> rejectDeposit(
+            @PathVariable String transactionCode,
+            @RequestBody(required = false) String reason) {
+        return ResponseEntity.ok(walletService.rejectDeposit(transactionCode, reason));
     }
 
     // Payment Settings Management

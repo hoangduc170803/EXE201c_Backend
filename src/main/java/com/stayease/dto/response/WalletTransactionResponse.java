@@ -29,6 +29,8 @@ public class WalletTransactionResponse {
     private BigDecimal balanceBefore;
     private BigDecimal balanceAfter;
     private String notes;
+    private String transferReference;
+    private String proofImageUrl;
     private LocalDateTime createdAt;
 }
 

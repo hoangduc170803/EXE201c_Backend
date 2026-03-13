@@ -1,6 +1,7 @@
 package com.stayease.controller;
 
 import com.stayease.dto.request.DepositRequest;
+import com.stayease.dto.request.DepositProofRequest;
 import com.stayease.dto.response.PaymentInfoResponse;
 import com.stayease.dto.response.UserWalletResponse;
 import com.stayease.dto.response.WalletTransactionResponse;
@@ -44,6 +45,14 @@ public class WalletController {
             Authentication authentication) {
         Long userId = getUserIdFromAuth(authentication);
         return ResponseEntity.ok(walletService.createDepositRequest(userId, request));
+    }
+
+    @PutMapping("/deposit/{transactionCode}/proof")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<WalletTransactionResponse> submitDepositProof(
+            @PathVariable String transactionCode,
+            @RequestBody DepositProofRequest request) {
+        return ResponseEntity.ok(walletService.submitDepositProof(transactionCode, request));
     }
 
     @GetMapping("/transactions")

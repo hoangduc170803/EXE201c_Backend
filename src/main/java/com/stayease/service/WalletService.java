@@ -1,6 +1,7 @@
 package com.stayease.service;
 
 import com.stayease.dto.request.DepositRequest;
+import com.stayease.dto.request.DepositProofRequest;
 import com.stayease.dto.response.UserWalletResponse;
 import com.stayease.dto.response.WalletTransactionResponse;
 import com.stayease.enums.TransactionStatus;
@@ -147,6 +148,50 @@ public class WalletService {
         return transactions.map(this::mapTransactionToResponse);
     }
 
+    public Page<WalletTransactionResponse> getPendingDeposits(Pageable pageable) {
+        Page<WalletTransaction> transactions = transactionRepository.findByTransactionTypeAndStatus(
+                TransactionType.DEPOSIT, TransactionStatus.PENDING, pageable);
+        return transactions.map(this::mapTransactionToResponse);
+    }
+
+    @Transactional
+    public WalletTransactionResponse rejectDeposit(String transactionCode, String reason) {
+        WalletTransaction transaction = transactionRepository.findByTransactionCode(transactionCode)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+
+        if (transaction.getStatus() != TransactionStatus.PENDING) {
+            throw new IllegalStateException("Transaction already processed");
+        }
+
+        transaction.setStatus(TransactionStatus.FAILED);
+        transaction.setNotes("Từ chối: " + (reason != null ? reason : "Không hợp lệ"));
+        transaction = transactionRepository.save(transaction);
+
+        log.info("Rejected deposit: {} - reason: {}", transactionCode, reason);
+        return mapTransactionToResponse(transaction);
+    }
+
+    @Transactional
+    public WalletTransactionResponse submitDepositProof(String transactionCode, DepositProofRequest request) {
+        WalletTransaction transaction = transactionRepository.findByTransactionCode(transactionCode)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionCode));
+
+        if (transaction.getStatus() != TransactionStatus.PENDING) {
+            throw new IllegalStateException("Transaction already processed");
+        }
+
+        if (request.getTransferReference() != null && !request.getTransferReference().isBlank()) {
+            transaction.setTransferReference(request.getTransferReference().trim());
+        }
+        if (request.getProofImageUrl() != null && !request.getProofImageUrl().isBlank()) {
+            transaction.setProofImageUrl(request.getProofImageUrl().trim());
+        }
+
+        transaction = transactionRepository.save(transaction);
+        log.info("Proof submitted for deposit: {} - ref: {}", transactionCode, request.getTransferReference());
+        return mapTransactionToResponse(transaction);
+    }
+
     private UserWalletResponse mapWalletToResponse(UserWallet wallet) {
         return UserWalletResponse.builder()
                 .id(wallet.getId())
@@ -176,6 +221,8 @@ public class WalletService {
                 .balanceBefore(transaction.getBalanceBefore())
                 .balanceAfter(transaction.getBalanceAfter())
                 .notes(transaction.getNotes())
+                .transferReference(transaction.getTransferReference())
+                .proofImageUrl(transaction.getProofImageUrl())
                 .createdAt(transaction.getCreatedAt())
                 .build();
     }
