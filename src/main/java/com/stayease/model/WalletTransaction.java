@@ -56,5 +56,11 @@ public class WalletTransaction extends BaseEntity {
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes; // Admin notes or additional info
+
+    @Column(name = "transfer_reference", length = 200)
+    private String transferReference; // Mã tham chiếu do ngân hàng cấp (VD: FT26071234567)
+
+    @Column(name = "proof_image_url", columnDefinition = "TEXT")
+    private String proofImageUrl; // URL ảnh biên lai chuyển khoản
 }
 

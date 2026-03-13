@@ -34,5 +34,11 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
 
     @Query("SELECT t FROM WalletTransaction t ORDER BY t.createdAt DESC")
     Page<WalletTransaction> findAllOrderByCreatedAtDesc(Pageable pageable);
+
+    @Query("SELECT t FROM WalletTransaction t WHERE t.transactionType = :type AND t.status = :status ORDER BY t.createdAt DESC")
+    Page<WalletTransaction> findByTransactionTypeAndStatus(
+            @Param("type") TransactionType type,
+            @Param("status") TransactionStatus status,
+            Pageable pageable);
 }
 
