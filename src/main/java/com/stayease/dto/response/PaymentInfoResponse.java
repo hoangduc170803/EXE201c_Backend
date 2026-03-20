@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class PaymentInfoResponse {
 
     private String bankName;
+    private String bankBin;
     private String bankAccountNumber;
     private String bankAccountHolder;
     private String bankBranch;

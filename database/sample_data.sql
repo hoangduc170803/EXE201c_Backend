@@ -11,7 +11,6 @@
 -- Admin: admin@holarent.com / password123
 -- Host chính: host@holarent.com / password123
 -- Host phụ: host2@holarent.com / password123
--- User thường: user@holarent.com / password123
 -- Guest: guest1@holarent.com, guest2@holarent.com... / password123
 -- =============================================
 

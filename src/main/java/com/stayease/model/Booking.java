@@ -1,6 +1,9 @@
 package com.stayease.model;
 
 import com.stayease.enums.BookingStatus;
+import com.stayease.enums.CommissionAppliesTo;
+import com.stayease.enums.CommissionRoundingMode;
+import com.stayease.enums.CommissionType;
 import com.stayease.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -76,6 +79,13 @@ public class Booking extends BaseEntity {
     
     @Column(name = "transaction_id", length = 100)
     private String transactionId;
+
+    // Bank transfer (QR) proof
+    @Column(name = "transfer_proof_image_url", length = 500)
+    private String transferProofImageUrl;
+
+    @Column(name = "transfer_reference", length = 100)
+    private String transferReference;
     
     @Column(name = "special_requests", columnDefinition = "TEXT")
     private String specialRequests;
@@ -94,6 +104,34 @@ public class Booking extends BaseEntity {
     
     @Column(name = "refund_amount", precision = 10, scale = 2)
     private BigDecimal refundAmount;
+
+    // Commission snapshot (captured when payment is confirmed)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "commission_type", length = 30)
+    private CommissionType commissionType;
+
+    @Column(name = "commission_percent", precision = 5, scale = 2)
+    private BigDecimal commissionPercent;
+
+    @Column(name = "commission_fixed_vnd", precision = 18, scale = 0)
+    private BigDecimal commissionFixedVnd;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "commission_applies_to", length = 20)
+    private CommissionAppliesTo commissionAppliesTo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "commission_rounding_mode", length = 20)
+    private CommissionRoundingMode commissionRoundingMode;
+
+    @Column(name = "commission_amount_vnd", precision = 18, scale = 0)
+    private BigDecimal commissionAmountVnd;
+
+    @Column(name = "host_payout_amount_vnd", precision = 18, scale = 0)
+    private BigDecimal hostPayoutAmountVnd;
+
+    @Column(name = "commission_rule_id")
+    private Long commissionRuleId;
     
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
