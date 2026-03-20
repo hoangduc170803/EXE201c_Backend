@@ -21,6 +21,7 @@ public class PaymentSettingService {
     public PaymentInfoResponse getPaymentInfo() {
         return PaymentInfoResponse.builder()
                 .bankName(getSettingValue(PaymentSetting.BANK_NAME))
+                .bankBin(getSettingValue(PaymentSetting.BANK_BIN))
                 .bankAccountNumber(getSettingValue(PaymentSetting.BANK_ACCOUNT_NUMBER))
                 .bankAccountHolder(getSettingValue(PaymentSetting.BANK_ACCOUNT_HOLDER))
                 .bankBranch(getSettingValue(PaymentSetting.BANK_BRANCH))
@@ -70,6 +71,7 @@ public class PaymentSettingService {
             log.info("Initializing default payment settings...");
 
             createSettingIfNotExists(PaymentSetting.BANK_NAME, "Vietcombank", "Tên ngân hàng", "BANK_INFO");
+            createSettingIfNotExists(PaymentSetting.BANK_BIN, "970436", "Mã BIN ngân hàng (VietQR)", "BANK_INFO");
             createSettingIfNotExists(PaymentSetting.BANK_ACCOUNT_NUMBER, "1234567890", "Số tài khoản", "BANK_INFO");
             createSettingIfNotExists(PaymentSetting.BANK_ACCOUNT_HOLDER, "CONG TY STAYEASE", "Chủ tài khoản", "BANK_INFO");
             createSettingIfNotExists(PaymentSetting.BANK_BRANCH, "Chi nhánh TP.HCM", "Chi nhánh", "BANK_INFO");
@@ -77,6 +79,16 @@ public class PaymentSettingService {
             createSettingIfNotExists(PaymentSetting.PAYMENT_NOTES,
                 "Vui lòng ghi rõ mã giao dịch trong nội dung chuyển khoản",
                 "Ghi chú thanh toán", "PAYMENT_INFO");
+
+            // Commission / Settlement defaults (can be changed by admin later)
+            createSettingIfNotExists(PaymentSetting.COMMISSION_SHORT_TERM_PERCENT, "6",
+                    "% hoa hồng nền tảng cho booking ShortTerm (tính trên tổng giá trị booking)", "COMMISSION");
+            createSettingIfNotExists(PaymentSetting.COMMISSION_LONG_TERM_FIRST_MONTH_PERCENT, "10",
+                    "% hoa hồng nền tảng cho booking LongTerm (tính trên tiền thuê tháng đầu)", "COMMISSION");
+            createSettingIfNotExists(PaymentSetting.SETTLEMENT_SHORT_TERM_RULE, "PAYOUT_ON_CHECKOUT",
+                    "Quy tắc đối soát/chi trả ShortTerm (chi trả khi checkout)", "SETTLEMENT");
+            createSettingIfNotExists(PaymentSetting.SETTLEMENT_LONG_TERM_RULE, "PAYOUT_AFTER_FIRST_MONTH",
+                    "Quy tắc đối soát/chi trả LongTerm (chi trả 1 lần sau tháng đầu)", "SETTLEMENT");
 
             log.info("Default payment settings initialized");
         }

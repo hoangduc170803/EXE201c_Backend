@@ -105,4 +105,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
            "GROUP BY MONTH(b.checkInDate), YEAR(b.checkInDate) " +
            "ORDER BY MONTH(b.checkInDate)")
     List<Object[]> findMonthlyRevenueByHostIdAndYear(@Param("hostId") Long hostId, @Param("year") Integer year);
+
+    /**
+     * Finds draft-like QR bookings that should be auto-cancelled.
+     * Criteria:
+     *  - status = PENDING (current model uses PENDING for newly created bookings)
+     *  - paymentStatus = PENDING (not marked as PAID)
+     *  - paymentMethod is null or QR_CODE (created on checkout)
+     *  - transferProofImageUrl is null/blank (guest hasn't uploaded receipt)
+     *  - createdAt older than cutoff
+     */
+    @Query("SELECT b FROM Booking b " +
+            "WHERE b.status = 'PENDING' " +
+            "AND b.paymentStatus = 'PENDING' " +
+            "AND (b.paymentMethod IS NULL OR b.paymentMethod = 'QR_CODE') " +
+            "AND (b.transferProofImageUrl IS NULL OR TRIM(b.transferProofImageUrl) = '') " +
+            "AND b.createdAt < :cutoff")
+    List<Booking> findAbandonedQrDrafts(@Param("cutoff") LocalDateTime cutoff);
 }

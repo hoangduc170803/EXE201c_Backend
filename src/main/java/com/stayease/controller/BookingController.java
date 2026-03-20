@@ -1,6 +1,7 @@
 package com.stayease.controller;
 
 import com.stayease.dto.request.CreateBookingRequest;
+import com.stayease.dto.request.SubmitTransferProofRequest;
 import com.stayease.dto.response.ApiResponse;
 import com.stayease.dto.response.BookingResponse;
 import com.stayease.dto.response.BookingStatsResponse;
@@ -117,6 +118,15 @@ public class BookingController {
             @RequestParam String paymentMethod) {
         BookingResponse booking = bookingService.processPayment(id, paymentMethod);
         return ResponseEntity.ok(ApiResponse.success("Payment processed successfully", booking));
+    }
+
+    @PutMapping("/{id}/transfer-proof")
+    @Operation(summary = "Submit bank transfer proof (guest uploads receipt) for QR payment")
+    public ResponseEntity<ApiResponse<BookingResponse>> submitTransferProof(
+            @PathVariable Long id,
+            @Valid @RequestBody SubmitTransferProofRequest request) {
+        BookingResponse booking = bookingService.submitTransferProof(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Transfer proof submitted", booking));
     }
 
     @PutMapping("/{id}/cancel")

@@ -36,9 +36,21 @@ public class BookingResponse {
     private BookingStatus status;
     private PaymentStatus paymentStatus;
     private String paymentMethod;
+    private String transferProofImageUrl;
+    private String transferReference;
     private String specialRequests;
     private String guestMessage;
     private String hostResponse;
+
+    // Cancellation / Refund
+    private String cancellationReason;
+    private String cancelledBy;
+    private BigDecimal refundAmount;
+
+    // Commission / Payout snapshot (captured when payment is confirmed)
+    private BigDecimal commissionAmountVnd;
+    private BigDecimal hostPayoutAmountVnd;
+
     private UserResponse guest;
     private PropertyResponse property;
     private LocalDateTime createdAt;

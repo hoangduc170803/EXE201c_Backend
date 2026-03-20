@@ -1,6 +1,7 @@
 package com.stayease.service;
 
 import com.stayease.dto.request.CreateBookingRequest;
+import com.stayease.dto.request.SubmitTransferProofRequest;
 import com.stayease.dto.response.BookingResponse;
 import com.stayease.dto.response.BookingStatsResponse;
 import com.stayease.dto.response.BookingCalendarResponse;
@@ -24,7 +25,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -37,15 +41,21 @@ public class BookingService {
     private final PropertyRepository propertyRepository;
     private final UserService userService;
     private final BookingMapper bookingMapper;
+    private final SettlementService settlementService;
+    private final BookingSettlementService bookingSettlementService;
     
     public BookingService(BookingRepository bookingRepository,
                           PropertyRepository propertyRepository,
                           UserService userService,
-                          BookingMapper bookingMapper) {
+                          BookingMapper bookingMapper,
+                          SettlementService settlementService,
+                          BookingSettlementService bookingSettlementService) {
         this.bookingRepository = bookingRepository;
         this.propertyRepository = propertyRepository;
         this.userService = userService;
         this.bookingMapper = bookingMapper;
+        this.settlementService = settlementService;
+        this.bookingSettlementService = bookingSettlementService;
     }
     
     public BookingResponse getBookingById(Long id) {
@@ -169,6 +179,7 @@ public class BookingService {
         }
 
         Booking savedBooking = bookingRepository.save(booking);
+        bookingSettlementService.createOrRecalculateForBooking(savedBooking.getId(), LocalDateTime.now());
         return bookingMapper.toResponse(savedBooking);
     }
 
@@ -187,10 +198,46 @@ public class BookingService {
         }
         
         if (booking.getPaymentStatus() != PaymentStatus.PAID) {
-            throw new BadRequestException("Payment must be completed before confirmation");
+            // Bank transfer (QR) flow: host can confirm once guest submitted proof.
+            if (booking.getTransferProofImageUrl() == null || booking.getTransferProofImageUrl().isBlank()) {
+                throw new BadRequestException("Payment must be completed before confirmation");
+            }
+            // Mark as paid when host confirms proof.
+            booking.setPaymentStatus(PaymentStatus.PAID);
+            if (booking.getPaymentMethod() == null || booking.getPaymentMethod().isBlank()) {
+                booking.setPaymentMethod("QR_CODE");
+            }
         }
 
         booking.setStatus(BookingStatus.CONFIRMED);
+        Booking savedBooking = bookingRepository.save(booking);
+        if (savedBooking.getPaymentStatus() == PaymentStatus.PAID) {
+            bookingSettlementService.createOrRecalculateForBooking(savedBooking.getId(), LocalDateTime.now());
+        }
+        return bookingMapper.toResponse(savedBooking);
+    }
+
+    @Transactional
+    public BookingResponse submitTransferProof(Long bookingId, SubmitTransferProofRequest request) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
+
+        User currentUser = userService.getCurrentUser();
+        if (!booking.getGuest().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedException("Only the guest can submit transfer proof for this booking");
+        }
+
+        if (request.getTransferProofImageUrl() == null || request.getTransferProofImageUrl().isBlank()) {
+            throw new BadRequestException("transferProofImageUrl is required");
+        }
+
+        booking.setTransferProofImageUrl(request.getTransferProofImageUrl());
+        booking.setTransferReference(request.getTransferReference());
+        booking.setPaymentMethod("QR_CODE");
+
+        // Keep paymentStatus as PENDING; host will verify proof and then confirm.
+        // (Optional future: add a separate proof status.)
+
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toResponse(savedBooking);
     }
@@ -207,6 +254,23 @@ public class BookingService {
         if (!isGuest && !isHost) {
             throw new UnauthorizedException("You are not authorized to cancel this booking");
         }
+
+        // Policy: Guest can cancel PENDING/CONFIRMED if check-in is in the future (server time).
+        // Host can cancel/reject (still cannot cancel COMPLETED).
+        LocalDateTime now = LocalDateTime.now();
+
+        // Compute check-in date time based on property check-in time (fallback 14:00 if missing)
+        LocalTime checkInTime = parseLocalTimeOrDefault(booking.getProperty().getCheckInTime(), LocalTime.of(14, 0));
+        LocalDateTime checkInDateTime = booking.getCheckInDate().atTime(checkInTime);
+
+        if (isGuest) {
+            if (booking.getStatus() != BookingStatus.PENDING && booking.getStatus() != BookingStatus.CONFIRMED) {
+                throw new BadRequestException("Guests can only cancel PENDING or CONFIRMED bookings");
+            }
+            if (!checkInDateTime.isAfter(now)) {
+                throw new BadRequestException("Bookings cannot be cancelled after check-in time");
+            }
+        }
         
         // Host can reject PENDING bookings or cancel CONFIRMED bookings
         // Guest can only cancel their own bookings (any status except COMPLETED)
@@ -217,6 +281,23 @@ public class BookingService {
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancellationReason(reason);
         booking.setCancelledBy(isGuest ? "USER" : "HOST");
+
+        // Refund: use totalPaid = booking.totalPrice (as requested)
+        // - Host cancellation: always 100%
+        // - Guest cancellation: depends on property.cancellationPolicy (Option A)
+        BigDecimal totalPaid = booking.getTotalPrice() != null ? booking.getTotalPrice() : BigDecimal.ZERO;
+        BigDecimal refundAmount;
+        if (isHost) {
+            refundAmount = totalPaid;
+        } else {
+            refundAmount = calculateGuestRefundAmount(
+                    totalPaid,
+                    booking.getProperty().getCancellationPolicy(),
+                    now,
+                    checkInDateTime
+            );
+        }
+        booking.setRefundAmount(refundAmount);
         
         // If host is cancelling/rejecting, store response
         if (isHost && reason != null) {
@@ -225,6 +306,67 @@ public class BookingService {
 
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toResponse(savedBooking);
+    }
+
+    private LocalTime parseLocalTimeOrDefault(String time, LocalTime defaultValue) {
+        if (time == null || time.isBlank()) return defaultValue;
+        try {
+            // Support formats like "14:00" or "14:00:00"
+            return LocalTime.parse(time.trim().length() == 5 ? time.trim() + ":00" : time.trim());
+        } catch (Exception ignored) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Option A cancellation policies (string-based) using improved model:
+     * - Flexible: 100% if >= 24h, 50% if >= 5 days, else 0%
+     * - Moderate: 100% if >= 5 days, 50% if >= 24h, else 0%
+     * - Strict: 0%
+     *
+     * We match by keyword in the stored policy text to tolerate current DB values.
+     */
+    private BigDecimal calculateGuestRefundAmount(
+            BigDecimal totalPaid,
+            String cancellationPolicyText,
+            LocalDateTime now,
+            LocalDateTime checkInDateTime
+    ) {
+        if (totalPaid == null) return BigDecimal.ZERO;
+        if (totalPaid.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+
+        long hoursBefore = ChronoUnit.HOURS.between(now, checkInDateTime);
+        long daysBefore = ChronoUnit.DAYS.between(now, checkInDateTime);
+
+        String policy = cancellationPolicyText == null ? "" : cancellationPolicyText.toLowerCase();
+
+        // STRICT
+        if (policy.contains("nghiem") || policy.contains("nghiêm") || policy.contains("strict")) {
+            return BigDecimal.ZERO;
+        }
+
+        // MODERATE
+        if (policy.contains("trung") || policy.contains("moderate")) {
+            if (daysBefore >= 3) return totalPaid;
+            if (hoursBefore >= 24) return percent(totalPaid, 50);
+            return BigDecimal.ZERO;
+        }
+
+        // FLEXIBLE (default)
+        if (policy.contains("linh") || policy.contains("flexible") || policy.isBlank()) {
+            if (hoursBefore >= 24) return totalPaid;
+            if (daysBefore >= 3) return percent(totalPaid, 50);
+            return BigDecimal.ZERO;
+        }
+
+        // Fallback: treat unknown policy as strict to be safe.
+        return BigDecimal.ZERO;
+    }
+
+    private BigDecimal percent(BigDecimal amount, int percent) {
+        return amount
+                .multiply(BigDecimal.valueOf(percent))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
     
     public boolean isPropertyAvailable(Long propertyId, LocalDate checkIn, LocalDate checkOut) {
@@ -259,26 +401,41 @@ public class BookingService {
         LocalDate startOfPreviousMonth = startOfMonth.minusMonths(1);
         LocalDate endOfPreviousMonth = startOfMonth.minusDays(1);
 
-        // Get pending bookings count (paid but not confirmed)
+        // Pending bookings count (paid but not confirmed) - unchanged
         Long pendingCount = bookingRepository.countByHostIdAndStatusAndPaymentStatus(
-            hostId, BookingStatus.PENDING, PaymentStatus.PAID);
+                hostId, BookingStatus.PENDING, PaymentStatus.PAID);
 
-        // Get confirmed bookings this month
+        // Confirmed bookings this month - unchanged
         Long confirmedThisMonth = bookingRepository.countByHostIdAndStatusAndCreatedAtBetween(
-            hostId, BookingStatus.CONFIRMED, startOfMonth.atStartOfDay(), now.atTime(23, 59, 59));
+                hostId, BookingStatus.CONFIRMED, startOfMonth.atStartOfDay(), now.atTime(23, 59, 59));
 
-        // Get confirmed bookings previous month
+        // Confirmed bookings previous month - unchanged
         Long previousMonthConfirmed = bookingRepository.countByHostIdAndStatusAndCreatedAtBetween(
-            hostId, BookingStatus.CONFIRMED, startOfPreviousMonth.atStartOfDay(), endOfPreviousMonth.atTime(23, 59, 59));
+                hostId, BookingStatus.CONFIRMED, startOfPreviousMonth.atStartOfDay(), endOfPreviousMonth.atTime(23, 59, 59));
 
-        // Calculate expected revenue from confirmed bookings
-        BigDecimal expectedRevenue = bookingRepository.sumTotalPriceByHostIdAndStatus(hostId, BookingStatus.CONFIRMED);
-        if (expectedRevenue == null) expectedRevenue = BigDecimal.ZERO;
+        // New business rule: Host does NOT receive full booking total directly.
+        // We show revenues using host payout snapshot if available.
+        BigDecimal expectedRevenue = BigDecimal.ZERO;
+        BigDecimal upcomingRevenue = BigDecimal.ZERO;
 
-        // Calculate upcoming revenue (confirmed bookings with check-in date in future)
-        BigDecimal upcomingRevenue = bookingRepository.sumTotalPriceByHostIdAndStatusAndCheckInDateAfter(
-            hostId, BookingStatus.CONFIRMED, now);
-        if (upcomingRevenue == null) upcomingRevenue = BigDecimal.ZERO;
+        // For MVP we compute from recent host bookings. (Can be optimized with DB sum queries later.)
+        List<Booking> bookings = bookingRepository.findByHostId(hostId, PageRequest.of(0, 10_000)).getContent();
+        LocalDateTime nowDt = LocalDateTime.now();
+
+        for (Booking b : bookings) {
+            if (b.getPaymentStatus() != PaymentStatus.PAID) continue;
+            if (b.getStatus() == BookingStatus.CANCELLED) continue;
+            if (b.getHostPayoutAmountVnd() == null) continue;
+
+            // expectedRevenue: sum of PAID bookings payout snapshot (money host should receive in total)
+            expectedRevenue = expectedRevenue.add(b.getHostPayoutAmountVnd());
+
+            // upcomingRevenue: sum of payout that is already eligible (due) by settlement rules
+            LocalDateTime dueAt = settlementService.computeDueAt(b);
+            if (dueAt != null && !nowDt.isBefore(dueAt)) {
+                upcomingRevenue = upcomingRevenue.add(b.getHostPayoutAmountVnd());
+            }
+        }
 
         return BookingStatsResponse.builder()
                 .pendingCount(pendingCount)
